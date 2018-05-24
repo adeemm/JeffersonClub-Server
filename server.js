@@ -32,13 +32,16 @@ var config = {
   },
   userDBs: {
     defaultDBs: {
-      private: ['student']
+      private: ['student'],
+      shared: ['events', 'news']
     },
     model: {
-      supertest: {
+      student: {
+        designDocs: ['hours'],
         permissions: ['_reader', '_writer', '_replicator']
       }
-    }
+    },
+    designDocDir: path.join(__dirname, './design-docs')
   },
   providers: {
     local: true
@@ -67,17 +70,17 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
 app.use(function(req, res, next) {
-   res.header("Access-Control-Allow-Origin", "*");
+   res.header('Access-Control-Allow-Origin', '*');
    res.header('Access-Control-Allow-Methods', 'DELETE, PUT');
-   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+   res.header('Access-Control-Allow-Headers', 'Authorization, Origin, X-Requested-With, Content-Type, Accept');
    next();
 });
 
-// app login auth
+// handle client app auth
 app.use('/auth', superlogin.router);
 
 app.use(session({
-    secret: 'super secret here', //TODO: change
+    secret: 'secret', //change this
     resave: false,
     saveUninitialized: true
 }));
@@ -86,17 +89,18 @@ var auth = function(req, res, next) {
   if (req.session && req.session.admin)
     return next();
   else
-    return res.redirect('/login'); //res.sendStatus(401);
+    return res.redirect('/login');
 };
 
+// handle backend admin panel auth
 app.get('/login', function (req, res) {
-  if(req.query.username === "username" || req.query.password === "password") { //TODO: change these
-    req.session.user = "username";
+  if(req.query.username === 'username' || req.query.password === 'password') {
+    req.session.user = 'username';
     req.session.admin = true;
     res.redirect('/index.html');
   }
   else {
-    res.sendFile(path.join(__dirname + '/www/login.html'));
+    res.sendFile(path.join(__dirname, './www/login.html'));
   }
 });
 
@@ -107,9 +111,10 @@ app.get('/logout', function (req, res) {
 
 app.use(auth);
 
-// Serve admin web backend files
+// serve admin panel backend
 app.use(express.static(path.join(__dirname, './www')));
 
+// setup api routes
 app.get('/api/everyone/hours', api.getAllHours);
 
 app.get('/api/everyone/events', api.getEvents);
@@ -128,4 +133,4 @@ app.delete('/api/:student/deleteDoc', api.deleteDoc);
 
 
 app.listen(app.get('port'));
-console.log("listening on port " + app.get('port'));
+console.log('listening on port ' + app.get('port'));

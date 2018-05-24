@@ -1,5 +1,5 @@
 {
-  "name": "JeffersonClub Server",
+  "name": "jeffersonclub-server",
   "version": "0.0.1",
   "description": "A Node.js backend for the JeffersonClub app",
   "engines": {
